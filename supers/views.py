@@ -1,3 +1,4 @@
+from django.shortcuts import get_object_or_404
 from rest_framework.decorators import api_view
 from rest_framework.response import Response
 from .serializers import SuperSerializer
@@ -27,12 +28,15 @@ def supers_list(request):
         else:
             return Response(serializer.errors, status=400)
 
-@api_view(['GET'])
+@api_view(['GET', 'PUT'])
 def super_detail(request, pk):
-    try:
-        result = Super.objects.get(pk=pk)
+    result = get_object_or_404(Super, pk=pk)
+    if request.method == 'GET':
         serializer = SuperSerializer(result);
         return Response(serializer.data)
+    elif request.method == 'PUT':
+        serializer = SuperSerializer(result, data=request.data)
+        serializer.is_valid(raise_exception=True)
+        serializer.save()
+        return Response(serializer.data)
 
-    except Super.DoesNotExist:
-        return Response(status=status.HTTP_404_NOT_FOUND);

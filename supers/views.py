@@ -11,8 +11,22 @@ from supers import serializers
 def supers_list(request):
     if request.method == 'GET':
         supers = Super.objects.all()
-        serializer = SuperSerializer(supers, many=True)
-        return Response(serializer.data)
+        heroes = supers.filter(super_type__type="Hero")
+        villains = supers.filter(super_type__type="Villain")
+        heroes_serialized = SuperSerializer(heroes,many=True)
+        villains_serialized = SuperSerializer(villains,many=True)
+
+        if request.query_params.get('type') == 'hero':
+            custom_response = heroes_serialized.data
+        elif request.query_params.get('type') == 'villain':
+            custom_response = villains_serialized.data
+        else:
+            custom_response = {
+                'heroes': heroes_serialized.data,
+                'villians': villains_serialized.data
+            }
+               
+        return Response(custom_response)
     elif request.method == 'POST':
         serializer = SuperSerializer(data=request.data)
         serializer.is_valid(raise_exception=True)
